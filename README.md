@@ -88,7 +88,7 @@ def send_to_yaml(yaml_filename, dict_list):
         print ("done!")
 ```
 
-
+## first filtering and segmentation
 ### 3- pcl_callback() function
 this function include filtering, segmentation and object recognition parts
 it will be called back every time a message is published to `/pr2/world/points`
@@ -119,7 +119,7 @@ Such outliers lead to complications in the estimation of point cloud characteris
 One of the filtering techniques used to remove such outliers is to perform a statistical analysis in the neighborhood of each point, and remove those points which do not meet a certain criteria. PCL’s StatisticalOutlierRemoval filter is an example of one such filtering technique. For each point in the point cloud, it computes the distance to all of its neighbors, and then calculates a mean distance.
 
 ```python
-# due to external factors like dust in the environment we apply Outlier Removal Filter
+    # due to external factors like dust in the environment we apply Outlier Removal Filter
     # taking the number of neighboring points = 4 & threshold scale factor = .00001
     outlier_filter = cloud_filtered.make_statistical_outlier_filter()
     outlier_filter.set_mean_k(4)
@@ -139,7 +139,7 @@ RGB-D cameras provide feature rich and particularly dense point clouds, meaning,
 
 So, in many cases, it is advantageous to downsample the data. In particular, you are going to use a VoxelGrid Downsampling Filter to derive a point cloud that has fewer points but should still do a good job of representing the input point cloud as a whole.
 ```python
-# using VoxelGrid Downsampling Filter to derive a point cloud that has fewer points
+    # using VoxelGrid Downsampling Filter to derive a point cloud that has fewer points
     # Creating a VoxelGrid filter object taking the leaf-size = .01
     vox = cloud_filtered.make_voxel_grid_filter()
     LEAF_SIZE = 0.01
@@ -160,7 +160,7 @@ The Pass Through Filter works much like a cropping tool, which allows you to cro
 Applying a Pass Through filter along z axis (the height with respect to the ground) to our tabletop scene in the range 0.61 to 1.1
 
 ```python
-passthrough = cloud_filtered.make_passthrough_filter()
+    passthrough = cloud_filtered.make_passthrough_filter()
     filter_axis = 'z'
     passthrough.set_filter_field_name(filter_axis)
     axis_min = 0.61
@@ -172,7 +172,7 @@ passthrough = cloud_filtered.make_passthrough_filter()
 Applying a Pass Through filter along y axis (for horizontal axis) to our tabletop scene in the range -0.45 to 0.45
 
 ```python
-passthrough = cloud_filtered.make_passthrough_filter()
+    passthrough = cloud_filtered.make_passthrough_filter()
     filter_axis = 'y'
     passthrough.set_filter_field_name(filter_axis)
     axis_min = -0.45
@@ -196,7 +196,7 @@ The RANSAC algorithm assumes that all of the data in a dataset is composed of bo
 If there is a prior knowledge of a certain shape being present in a given data set, we can use RANSAC to estimate what pieces of the point cloud set belong to that shape by assuming a particular model.
 
 ```python
-# using The RANSAC algorithm to remove the table from the scene
+    # using The RANSAC algorithm to remove the table from the scene
     # by Creating the segmentation object and Setting the model
     # setting the max_distance then extracting the inliers and outliers
     seg = cloud_filtered.make_segmenter()
@@ -227,7 +227,7 @@ The DBSCAN algorithm creates clusters by grouping data points that are within so
 The DBSCAN Algorithm is sometimes also called “Euclidean Clustering”, because the decision of whether to place a point in a particular cluster is based upon the “Euclidean distance” between that point and other cluster members.
 
 ```python
-# using a PCL library to perform a DBSCAN cluster search
+    # using a PCL library to perform a DBSCAN cluster search
     # first convert XYZRGB to XYZ then Create a cluster extraction object
     # then by Settin the tolerances for distance threshold, minimum and maximum cluster size
     # then Search the k-d tree for clusters and Extract indices for each of the discovered clusters
@@ -244,7 +244,7 @@ The DBSCAN Algorithm is sometimes also called “Euclidean Clustering”, becaus
 visualize the results in RViz! by creating another point cloud of type PointCloud_PointXYZRGB.
 
 ```python
-# final step is to visualize the results in RViz!
+    # final step is to visualize the results in RViz!
     # by creating another point cloud of type PointCloud_PointXYZRGB
     cluster_color = get_color_list(len(cluster_indices))
     color_cluster_point_list = []
@@ -263,6 +263,44 @@ visualize the results in RViz! by creating another point cloud of type PointClou
 ![c1](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/c1.jpg)
 ![c2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/c2.jpg)
 ![c3](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/c3.jpg)
+
+### Converting PCL data to ROS messages to Publish it
+
+```python
+    ros_cluster_cloud = pcl_to_ros(cluster_cloud)
+    ros_cloud_objects = pcl_to_ros(extracted_objects)
+    ros_cloud_table = pcl_to_ros(extracted_table)
+```
+### Publish the ROS messages
+
+```python
+    pcl_objects_pub.publish(ros_cloud_objects)
+    pcl_table_pub.publish(ros_cloud_table)
+    pcl_cluster_pub.publish(ros_cluster_cloud)
+```
+
+## second object recognition  and pose estimation
+
+### 9- Color Histograms
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
