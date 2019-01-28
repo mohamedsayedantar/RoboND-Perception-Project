@@ -4,12 +4,30 @@
 using pr2 robot which has RGB-D camera to perceive it's surrounding to pick specific object by defining it and place it in another specific place depending on the object itself, by performing analysis on the received data which has noise and distortion, by applying the filtering and segmentation techniques then object recognition  and pose estimation to be able to tell the robot the position and orientation for each object.
 
 
-# about PR2
+## about PR2
 The PR2 is one of the most advanced research robots ever built. Its powerful hardware and software systems let it do things like clean up tables, fold towels, and fetch you drinks from the fridge.
 
-![PR20](http://3.bp.blogspot.com/_Fz8u1rrdLUM/S14lup5wfaI/AAAAAAAABAw/xlWqnyYIcas/s400/WILLOW+GARAGE+PR2+DIAGRAM.png)
+![PR20](https://image.slidesharecdn.com/lecture04-100211112931-phpapp02/95/lecture-04-sensors-11-728.jpg?cb=1265887798)
 ![PR21](https://robots.ieee.org/robots/pr2/Photos/SD/pr2-photo2-full.jpg)
 ![PR22](https://robots.ieee.org/robots/pr2/Photos/SD/pr2-photo1-full.jpg)
+
+
+## the project outlines
+
+1. Imports
+2. helper functions
+3. pcl_callback() function
+4. Statistical Outlier Filtering
+5. Voxel Grid Downsampling
+6. PassThrough Filter
+7. RANSAC Plane Segmentation
+8. Euclidean Clustering
+9. Color Histograms
+10. normal Histograms
+11. object recognition
+12. PR2_Mover function
+13. Creating ROS Node, Subscribers, and Publishers
+14. Running
 
 
 
