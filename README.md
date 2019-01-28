@@ -27,8 +27,8 @@ The PR2 is one of the most advanced research robots ever built. Its powerful har
 11. object recognition
 12. PR2_Mover function
 13. Creating ROS Node, Subscribers, and Publishers
-14. environment setup
-15. Running
+14. environment setup and running
+15. Notes
 
 
 ### 1- imports
@@ -352,34 +352,204 @@ def compute_normal_histograms(normal_cloud):
 ![norm_his](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/norm_h.jpg)
 
 
+### 11- object recognition "SVM"
+
+Support Vector Machine or "SVM" is just a funny name for a particular supervised machine learning algorithm that allows you to characterize the parameter space of your dataset into discrete classes.
+
+SVMs work by applying an iterative method to a training dataset, where each item in the training set is characterized by a feature vector and a label. 
+
+```python 
+    #########################################
+    # second part :- object recognition
+    #########################################
 
 
+    # Classify the clusters
+    detected_objects_labels = []
+    detected_objects = []
+
+    # loop to cycle through each of the segmented clusters
+    for index, pts_list in enumerate(cluster_indices):
+
+        # Grab the points for the cluster
+        pcl_cluster = extracted_objects.extract(pts_list)
+
+        # convert the cluster from pcl to ROS
+        ros_cluster = pcl_to_ros(pcl_cluster)
+
+        # Extract histogram features
+        color_hists = compute_color_histograms(ros_cluster, using_hsv=True)
+        normals = get_normals(ros_cluster)
+        normal_hists = compute_normal_histograms(normals)
+        feature = np.concatenate((color_hists, normal_hists))
+
+        # Make the prediction, retrieve the label for the result
+        # and add it to detected_objects_labels list
+        prediction = clf.predict(scaler.transform(feature.reshape(1,-1)))
+        label = encoder.inverse_transform(prediction)[0]
+        detected_objects_labels.append(label)
+
+        # Publish a label into RViz
+        label_pos = list(white_cloud[pts_list[0]])
+        label_pos[2] += .2
+        object_markers_pub.publish(make_label(label,label_pos, index))
+
+        # Add the detected object to the list of detected objects.
+        do = DetectedObject()
+        do.label = label
+        do.cloud = ros_cluster
+        detected_objects.append(do)
+
+    rospy.loginfo('Detected {} objects: {}'.format(len(detected_objects_labels), detected_objects_labels))
+
+    # Publish the list of detected objects
+    detected_objects_pub.publish(detected_objects)
+
+    # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
+    # Could add some logic to determine whether or not your object detections are robust
+    # before calling pr2_mover()
+    try:
+        pr2_mover(detected_objects)
+
+    except rospy.ROSInterruptException:
+        pass
+```
+#### then here we called pr2_mover function with detected_objects as input
+
+#### for the 3 worlds object recognition point clouds
+
+![try6](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try6.jpg)
+![try7](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try7.jpg)
+![try8](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try8.jpg)
 
 
+### 12- PR2_Mover function
+
+#### first we have to  Initialize the variables
+
+```python
+    object_name = String()
+    test_scene_num = Int32()
+    pick_pose = Pose()
+    place_pose = Pose()
+    arm_name = String()
+```
+
+#### then we have to Get/Read parameters and loop through each point and compute it's centroid
+
+```python
+    # Get/Read parameters
+    object_list_param = rospy.get_param('/object_list')
+    dropbox_param = rospy.get_param('/dropbox')
+    test_scene_num.data = 2
+    yaml_dict_list = []
+    labels = []
+    centroids = []
+
+    # access the (x, y, z) coordinates of each point and compute the centroid
+    for object in object_list:
+        labels.append(object.label)
+        points_arr = ros_to_pcl(object.cloud).to_array()
+        centroids.append(np.mean(points_arr, axis=0)[:3])
+```
+
+#### then we have to loop through the pick list to calc the pick pose and the place pose  then we have to Create a list of dictionaries for yaml.
+
+```python
+    for i in range(0, len(object_list_param)):
+        # get the object name and group from object list
+        object_name.data = object_list_param[i]['name']
+        object_group = object_list_param[i]['group']
+
+        try:
+            index = labels.index(object_name.data)
+        except ValueError:
+            print "Object not detected: %s" %object_name.data
+            continue
+
+        # get the pick pose and place pose
+        pick_pose.position.x = np.asscalar(centroids[index][0])
+        pick_pose.position.y = np.asscalar(centroids[index][1])
+        pick_pose.position.z = np.asscalar(centroids[index][2])
+
+        selected_dic = [element for element in dropbox_param if element['group'] == object_group][0]
+        position = selected_dic.get('position')
+        place_pose.position.x = position[0]
+        place_pose.position.y = position[1]
+        place_pose.position.z = position[2]
+
+        # to know wich arm to be used
+        selected_dic = [element for element in dropbox_param if element['group'] == object_group][0]
+        arm_name.data = selected_dic.get('name')
+
+        # Create a list of dictionaries for yaml
+        yaml_dict = make_yaml_dict(test_scene_num, arm_name, object_name, pick_pose, place_pose)
+        yaml_dict_list.append(yaml_dict)
+
+        # Wait for 'pick_place_routine' service to come up
+        rospy.wait_for_service('pick_place_routine')
+        try:
+            pick_place_routine = rospy.ServiceProxy('pick_place_routine', PickPlace)
+            resp = pick_place_routine(test_scene_num, object_name, arm_name, pick_pose, place_pose)
+            print ("Response: ",resp.success)
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
+```
+
+#### eventually extract the output in yaml format
+
+```python
+    # get the output in yaml format
+    yaml_filename = 'output_'+str(test_scene_num.data)+'.yaml'
+    send_to_yaml(yaml_filename, yaml_dict_list)
+```
 
 
+### 13- Creating ROS Node, Subscribers, and Publishers
+
+#### first we have to intialize our node 
+
+```python
+if __name__ == '__main__':
+
+    # ROS node initialization
+    rospy.init_node('clustering', anonymous=True)
+```
+
+#### then we have to Create Subscribers and Publishers
+
+```python
+    # Create Subscribers
+    pcl_sub = rospy.Subscriber("/pr2/world/points", pc2.PointCloud2, pcl_callback, queue_size=1)
+
+    # Create Publishers
+    pcl_objects_pub = rospy.Publisher("/pcl_objects", PointCloud2, queue_size=1)
+    pcl_table_pub = rospy.Publisher("/pcl_table", PointCloud2, queue_size=1)
+    pcl_cluster_pub = rospy.Publisher("/pcl_cluster", PointCloud2, queue_size=1)
+    object_markers_pub   = rospy.Publisher("/object_markers", Marker, queue_size=1)
+    detected_objects_pub = rospy.Publisher("/detected_objects", DetectedObjectsArray, queue_size=1)
+```
+
+#### now we cat load the model data from the disc, and as the node is still active we will spin our code.
+
+```python
+    # Load Model From disk
+    model = pickle.load(open('model.sav', 'rb'))
+    clf = model['classifier']
+    encoder = LabelEncoder()
+    encoder.classes_ = model['classes']
+    scaler = model['scaler']
+
+    # Initialize color_list
+    get_color_list.color_list = []
+
+    # Spin while node is not shutdown
+    while not rospy.is_shutdown():
+        rospy.spin()
+```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### 14- environment setup and running
 
 For this setup, catkin_ws is the name of active ROS Workspace, if your workspace name is different, change the commands accordingly
 If you do not have an active ROS workspace, you can create one by:
@@ -393,9 +563,9 @@ $ catkin_make
 Now that you have a workspace, clone or download this repo into the src directory of your workspace:
 ```sh
 $ cd ~/catkin_ws/src
-$ git clone https://github.com/udacity/RoboND-Perception-Project.git
+$ git clone https://github.com/mohamedsayedantar/RoboND-Perception-Project.get
 ```
-### Note: If you have the Kinematics Pick and Place project in the same ROS Workspace as this project, please remove the 'gazebo_grasp_plugin' directory from the `RoboND-Perception-Project/` directory otherwise ignore this note. 
+#### Note: If you have the Kinematics Pick and Place project in the same ROS Workspace as this project, please remove the 'gazebo_grasp_plugin' directory from the `RoboND-Perception-Project/` directory otherwise ignore this note. 
 
 Now install missing dependencies using rosdep install:
 ```sh
@@ -417,62 +587,47 @@ If you haven’t already, following line can be added to your .bashrc to auto-so
 source ~/catkin_ws/devel/setup.bash
 ```
 
-To run the demo:
-```sh
-$ cd ~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts
-$ chmod u+x pr2_safe_spawner.sh
-$ ./pr2_safe_spawner.sh
-```
-![demo-1](https://user-images.githubusercontent.com/20687560/28748231-46b5b912-7467-11e7-8778-3095172b7b19.png)
-
-
-
-Once Gazebo is up and running, make sure you see following in the gazebo world:
-- Robot
-
-- Table arrangement
-
-- Three target objects on the table
-
-- Dropboxes on either sides of the robot
-
-
-If any of these items are missing, please report as an issue on [the waffle board](https://waffle.io/udacity/robotics-nanodegree-issues).
-
-In your RViz window, you should see the robot and a partial collision map displayed:
-
-![demo-2](https://user-images.githubusercontent.com/20687560/28748286-9f65680e-7468-11e7-83dc-f1a32380b89c.png)
-
-Proceed through the demo by pressing the ‘Next’ button on the RViz window when a prompt appears in your active terminal
-
-The demo ends when the robot has successfully picked and placed all objects into respective dropboxes (though sometimes the robot gets excited and throws objects across the room!)
-
-Close all active terminal windows using **ctrl+c** before restarting the demo.
-
-You can launch the project scenario like this:
+To run the project:
 ```sh
 $ roslaunch pr2_robot pick_place_project.launch
 ```
-# Required Steps for a Passing Submission:
-1. Extract features and train an SVM model on new objects (see `pick_list_*.yaml` in `/pr2_robot/config/` for the list of models you'll be trying to identify). 
-2. Write a ROS node and subscribe to `/pr2/world/points` topic. This topic contains noisy point cloud data that you must work with.
-3. Use filtering and RANSAC plane fitting to isolate the objects of interest from the rest of the scene.
-4. Apply Euclidean clustering to create separate clusters for individual items.
-5. Perform object recognition on these objects and assign them labels (markers in RViz).
-6. Calculate the centroid (average in x, y and z) of the set of points belonging to that each object.
-7. Create ROS messages containing the details of each object (name, pick_pose, etc.) and write these messages out to `.yaml` files, one for each of the 3 scenarios (`test1-3.world` in `/pr2_robot/worlds/`).  See the example `output.yaml` for details on what the output should look like.  
-8. Submit a link to your GitHub repo for the project or the Python code for your perception pipeline and your output `.yaml` files (3 `.yaml` files, one for each test world).  You must have correctly identified 100% of objects from `pick_list_1.yaml` for `test1.world`, 80% of items from `pick_list_2.yaml` for `test2.world` and 75% of items from `pick_list_3.yaml` in `test3.world`.
-9. Congratulations!  Your Done!
 
-# Extra Challenges: Complete the Pick & Place
-7. To create a collision map, publish a point cloud to the `/pr2/3d_map/points` topic and make sure you change the `point_cloud_topic` to `/pr2/3d_map/points` in `sensors.yaml` in the `/pr2_robot/config/` directory. This topic is read by Moveit!, which uses this point cloud input to generate a collision map, allowing the robot to plan its trajectory.  Keep in mind that later when you go to pick up an object, you must first remove it from this point cloud so it is removed from the collision map!
-8. Rotate the robot to generate collision map of table sides. This can be accomplished by publishing joint angle value(in radians) to `/pr2/world_joint_controller/command`
-9. Rotate the robot back to its original state.
-10. Create a ROS Client for the “pick_place_routine” rosservice.  In the required steps above, you already created the messages you need to use this service. Checkout the [PickPlace.srv](https://github.com/udacity/RoboND-Perception-Project/tree/master/pr2_robot/srv) file to find out what arguments you must pass to this service.
-11. If everything was done correctly, when you pass the appropriate messages to the `pick_place_routine` service, the selected arm will perform pick and place operation and display trajectory in the RViz window
-12. Place all the objects from your pick list in their respective dropoff box and you have completed the challenge!
-13. Looking for a bigger challenge?  Load up the `challenge.world` scenario and see if you can get your perception pipeline working there!
+and in another terminal:
+```sh
+$ cd ~/catkin_ws/src/RoboND-Perception-Project/pr2_robot/scripts
+$ chmod u+x project_template.py
+$ cd ~/catkin_ws
+$ rosrun pr2_robot project_template.py
+```
 
-For all the step-by-step details on how to complete this project see the [RoboND 3D Perception Project Lesson](https://classroom.udacity.com/nanodegrees/nd209/parts/586e8e81-fc68-4f71-9cab-98ccd4766cfe/modules/e5bfcfbd-3f7d-43fe-8248-0c65d910345a/lessons/e3e5fd8e-2f76-4169-a5bc-5a128d380155/concepts/802deabb-7dbb-46be-bf21-6cb0a39a1961)
-Note: The robot is a bit moody at times and might leave objects on the table or fling them across the room :D
-As long as your pipeline performs succesful recognition, your project will be considered successful even if the robot feels otherwise!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
