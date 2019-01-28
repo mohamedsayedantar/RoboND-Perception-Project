@@ -649,7 +649,16 @@ $ rosrun sensor_stick train_svm.py
 ![w33](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try6.jpg)
 
 
+## Notes
 
+### Note 1:
+in the world 3 after running `rosrun pr2_robot project_template.py` this error will occur:
+![error](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/error.jpg)
+
+to solve this error go to `features.py` file in `sensor_stick/src/sensor_stick` to modify the `np.histogram` method in `compute_normal_histograms` function by changing the range from `range=(0, 256)` to `range=(-1, 1)` to solve this error.
+
+### Note 2:
+the 3 worlds `model.sav` files is existed in the `RoboND-Perception-Project` directory as `model_*.sav` 
 
 
 
