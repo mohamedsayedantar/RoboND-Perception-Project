@@ -31,7 +31,7 @@ The PR2 is one of the most advanced research robots ever built. Its powerful har
 15. Notes
 
 
-### 1- imports
+## 1- imports
 using multiple python libraries like `numpy` `sklearn` `pickle` `pickle` and some ROS libraries
 ```python
 import numpy as np
@@ -59,7 +59,7 @@ import yaml
 ```
 
 
-### 2- helper functions
+## 2- helper functions
 using some functions like `get_normals` `make_yaml_dict` `send_to_yaml`
 ```python
 # Helper function to get surface normals
@@ -89,7 +89,7 @@ def send_to_yaml(yaml_filename, dict_list):
 ```
 
 ## first filtering and segmentation
-### 3- pcl_callback() function
+## 3- pcl_callback() function
 this function include filtering, segmentation and object recognition parts
 it will be called back every time a message is published to `/pr2/world/points`
 #### first by converting the ros message type to pcl data 
@@ -111,7 +111,7 @@ def pcl_callback(pcl_msg):
 
 
 
-### 4- Statistical Outlier Filtering
+## 4- Statistical Outlier Filtering
 While calibration takes care of distortion, noise due to external factors like dust in the environment, humidity in the air, or presence of various light sources lead to sparse outliers which corrupt the results even more.
 
 Such outliers lead to complications in the estimation of point cloud characteristics like curvature, gradients, etc. leading to erroneous values, which in turn might cause failures at various stages in our perception pipeline.
@@ -134,7 +134,7 @@ One of the filtering techniques used to remove such outliers is to perform a sta
 big difference !!
 
 
-### 5- Voxel Grid Downsampling
+## 5- Voxel Grid Downsampling
 RGB-D cameras provide feature rich and particularly dense point clouds, meaning, more points are packed in per unit volume than, for example, a Lidar point cloud. Running computation on a full resolution point cloud can be slow and may not yield any improvement on results obtained using a more sparsely sampled point cloud.
 
 So, in many cases, it is advantageous to downsample the data. In particular, you are going to use a VoxelGrid Downsampling Filter to derive a point cloud that has fewer points but should still do a good job of representing the input point cloud as a whole.
@@ -153,7 +153,7 @@ So, in many cases, it is advantageous to downsample the data. In particular, you
 done! : low points per unit volume
 
 
-### 6- PassThrough Filter 
+## 6- PassThrough Filter 
 
 The Pass Through Filter works much like a cropping tool, which allows you to crop any given 3D point cloud by specifying an axis with cut-off values along that axis. The region you allow to pass through, is often referred to as region of interest.
 
@@ -187,7 +187,7 @@ Applying a Pass Through filter along y axis (for horizontal axis) to our tableto
 done! : the region has been specified
 
 
-### 7- RANSAC Plane Segmentation
+## 7- RANSAC Plane Segmentation
 
 to remove the table itself from the scene. a popular technique known as Random Sample Consensus or "RANSAC". RANSAC is an algorithm, that can be used to identify points in the dataset that belong to a particular model.
 
@@ -218,7 +218,7 @@ If there is a prior knowledge of a certain shape being present in a given data s
 done! : object and table have been extracted
 
 
-### 8- Euclidean Clustering "DBSCAN Algorithm"
+## 8- Euclidean Clustering "DBSCAN Algorithm"
 
 DBSCAN stands for Density-Based Spatial Clustering of Applications with Noise. 
 
@@ -281,7 +281,7 @@ visualize the results in RViz! by creating another point cloud of type PointClou
 
 ## second object recognition  and pose estimation
 
-### 9- Color Histograms
+## 9- Color Histograms
 a color histogram is a representation of the distribution of colors in an image. For digital images, a color histogram represents the number of pixels that have colors in each of a fixed list of color ranges, that span the image's color space, the set of all possible colors.
 
 #### copmute the color histogram
@@ -322,7 +322,7 @@ def compute_color_histograms(cloud, using_hsv=False):
 ![color_his](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/col_h.jpg)
 
 
-### 10- normal histograms
+## 10- normal histograms
 a normal histogram is a representation of the distribution of normals to the shape in an image
 
 ```python
@@ -352,7 +352,7 @@ def compute_normal_histograms(normal_cloud):
 ![norm_his](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/norm_h.jpg)
 
 
-### 11- object recognition "SVM"
+## 11- object recognition "SVM"
 
 Support Vector Machine or "SVM" is just a funny name for a particular supervised machine learning algorithm that allows you to characterize the parameter space of your dataset into discrete classes.
 
@@ -423,7 +423,7 @@ SVMs work by applying an iterative method to a training dataset, where each item
 ![try8](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try8.jpg)
 
 
-### 12- PR2_Mover function
+## 12- PR2_Mover function
 
 #### first we have to  Initialize the variables
 
@@ -505,7 +505,7 @@ SVMs work by applying an iterative method to a training dataset, where each item
 ```
 
 
-### 13- Creating ROS Node, Subscribers, and Publishers
+## 13- Creating ROS Node, Subscribers, and Publishers
 
 #### first we have to intialize our node 
 
@@ -549,7 +549,7 @@ if __name__ == '__main__':
 ```
 
 
-### 14- environment setup and running
+## 14- environment setup and running
 
 For this setup, catkin_ws is the name of active ROS Workspace, if your workspace name is different, change the commands accordingly
 If you do not have an active ROS workspace, you can create one by:
@@ -600,7 +600,53 @@ $ cd ~/catkin_ws
 $ rosrun pr2_robot project_template.py
 ```
 
+#### to generate the model.sav file for each group of objects "for each world"
+you can change the objects in `capture_features.py` file in `sensor_stick/scripts` with the objects for each world.
 
+##### these objects can be found in `pick_list_*.yaml` files in `/pr2_robot/config/` now we can Generate the Features:
+```sh
+$ cd ~/catkin_ws
+$ roslaunch sensor_stick training.launch
+```
+
+##### then in another terminal
+```sh
+$ rosrun sensor_stick capture_features.py
+```
+
+#### after finishing we able to generate our model.sav file using:
+```sh
+$ rosrun sensor_stick train_svm.py
+```
+
+##### to change the world itself in Gazebo and RViz we can change `pick_list_1` and `test1` in `pick_place_project.launch` file in the `/pr2_robot/config` directory to choose any world from the 3 worlds
+
+```python
+    <!--TODO:Change the world name to load different tabletop setup-->
+    <arg name="world_name" value="$(find pr2_robot)/worlds/test1.world"/>
+```
+```python
+    <!--TODO:Change the list name based on the scene you have loaded-->
+    <rosparam command="load" file="$(find pr2_robot)/config/pick_list_1.yaml"/>
+```
+
+
+### the normalized confusion matrices and the confusion matrices without normalization --> for the 3 worlds
+
+#### world 1
+![w11](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w11.jpg)
+![w12](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w12.jpg)
+![w13](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try6.jpg)
+
+#### world 2
+![w21](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w21.jpg)
+![w22](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w22.jpg)
+![w23](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try7.jpg)
+
+#### world 2
+![w31](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w31.jpg)
+![w32](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w32.jpg)
+![w33](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try8.jpg)
 
 
 
