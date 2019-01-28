@@ -131,7 +131,7 @@ One of the filtering techniques used to remove such outliers is to perform a sta
 
 ![try2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try2.jpg)
 ![try2'](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try2'.jpg)
-big difference right!!
+big difference !!
 
 
 ### 5- Voxel Grid Downsampling
@@ -150,7 +150,7 @@ So, in many cases, it is advantageous to downsample the data. In particular, you
 #### the cloud after Voxel Grid Downsampling
 
 ![try2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try3.jpg)
-low points per unit volume!!
+done! : low points per unit volume
 
 
 ### 6- PassThrough Filter 
@@ -181,11 +181,41 @@ passthrough = cloud_filtered.make_passthrough_filter()
     cloud_filtered = passthrough.filter()
 ```
 
+#### the cloud after PassThrough Filter
+
 ![try2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try4.jpg)
-the region has been specified!!
+done! : the region has been specified
 
 
 ### 7- RANSAC Plane Segmentation
+
+to remove the table itself from the scene. a popular technique known as Random Sample Consensus or "RANSAC". RANSAC is an algorithm, that can be used to identify points in the dataset that belong to a particular model.
+
+The RANSAC algorithm assumes that all of the data in a dataset is composed of both inliers and outliers, where inliers can be defined by a particular model with a specific set of parameters, while outliers do not fit that model and hence can be discarded. Like in the example below, we can extract the outliners that are not good fits for the model.
+
+If there is a prior knowledge of a certain shape being present in a given data set, we can use RANSAC to estimate what pieces of the point cloud set belong to that shape by assuming a particular model.
+
+```python
+# using The RANSAC algorithm to remove the table from the scene
+    # by Creating the segmentation object and Setting the model
+    # setting the max_distance then extracting the inliers and outliers
+    seg = cloud_filtered.make_segmenter()
+    seg.set_model_type(pcl.SACMODEL_PLANE)
+    seg.set_method_type(pcl.SAC_RANSAC)
+    max_distance =0.01
+    seg.set_distance_threshold(max_distance)
+    inliers, coefficients = seg.segment()
+
+    # Extract inliers and outliers
+    extracted_table = cloud_filtered.extract(inliers, negative=False)
+    extracted_objects = cloud_filtered.extract(inliers, negative=True)
+```
+
+#### the cloud after RANSAC Plane Segmentation for extracted_objects and extracted_table
+
+![try2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try5.jpg)
+![try2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try5'.jpg)
+done! : object and table have been extracted
 
 
 
