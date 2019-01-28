@@ -418,9 +418,9 @@ SVMs work by applying an iterative method to a training dataset, where each item
 
 #### for the 3 worlds object recognition point clouds
 
-![try6](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try6.jpg)
 ![try7](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try7.jpg)
 ![try8](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try8.jpg)
+![try6](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try6.jpg)
 
 
 ## 12- PR2_Mover function
@@ -621,11 +621,11 @@ $ rosrun sensor_stick train_svm.py
 
 ##### to change the world itself in Gazebo and RViz we can change `pick_list_1` and `test1` in `pick_place_project.launch` file in the `/pr2_robot/config` directory to choose any world from the 3 worlds
 
-```python
+```
     <!--TODO:Change the world name to load different tabletop setup-->
     <arg name="world_name" value="$(find pr2_robot)/worlds/test1.world"/>
 ```
-```python
+```
     <!--TODO:Change the list name based on the scene you have loaded-->
     <rosparam command="load" file="$(find pr2_robot)/config/pick_list_1.yaml"/>
 ```
@@ -633,20 +633,20 @@ $ rosrun sensor_stick train_svm.py
 
 ### the normalized confusion matrices and the confusion matrices without normalization --> for the 3 worlds
 
-#### world 1
+### world 1
 ![w11](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w11.jpg)
 ![w12](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w12.jpg)
-![w13](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try6.jpg)
+![w13](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try7.jpg)
 
-#### world 2
+### world 2
 ![w21](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w21.jpg)
 ![w22](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w22.jpg)
-![w23](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try7.jpg)
+![w23](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try8.jpg)
 
-#### world 2
+### world 2
 ![w31](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w31.jpg)
 ![w32](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/w32.jpg)
-![w33](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try8.jpg)
+![w33](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try6.jpg)
 
 
 
