@@ -92,11 +92,38 @@ def send_to_yaml(yaml_filename, dict_list):
 ### 3- pcl_callback() function
 this function include filtering, segmentation and object recognition parts
 it will be called back every time a message is published to `/pr2/world/points`
+#### first by converting the ros message type to pcl data 
+```python
+def pcl_callback(pcl_msg):
+
+    ##########################################
+    # first part :- filtering and segmentation
+    ##########################################
+
+
+    # first by converting the ros message type to pcl data
+    cloud_filtered = ros_to_pcl(pcl_msg)
+```
 
 
 ### 4- Statistical Outlier Filtering
+While calibration takes care of distortion, noise due to external factors like dust in the environment, humidity in the air, or presence of various light sources lead to sparse outliers which corrupt the results even more.
+Such outliers lead to complications in the estimation of point cloud characteristics like curvature, gradients, etc. leading to erroneous values, which in turn might cause failures at various stages in our perception pipeline.
+One of the filtering techniques used to remove such outliers is to perform a statistical analysis in the neighborhood of each point, and remove those points which do not meet a certain criteria. PCL’s StatisticalOutlierRemoval filter is an example of one such filtering technique. For each point in the point cloud, it computes the distance to all of its neighbors, and then calculates a mean distance.
 
+```python
+# due to external factors like dust in the environment we apply Outlier Removal Filter
+    # taking the number of neighboring points = 4 & threshold scale factor = .00001
+    outlier_filter = cloud_filtered.make_statistical_outlier_filter()
+    outlier_filter.set_mean_k(4)
+    x = 0.00001
+    outlier_filter.set_std_dev_mul_thresh(x)
+    cloud_filtered = outlier_filter.filter()
+```
+![try1](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try1.jpg)
+![try1'](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try1'.jpg)
 
+### 5- 
 
 
 
