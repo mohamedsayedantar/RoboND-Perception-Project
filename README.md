@@ -218,6 +218,57 @@ If there is a prior knowledge of a certain shape being present in a given data s
 done! : object and table have been extracted
 
 
+### 8- Euclidean Clustering "DBSCAN Algorithm"
+
+DBSCAN stands for Density-Based Spatial Clustering of Applications with Noise. 
+
+The DBSCAN algorithm creates clusters by grouping data points that are within some threshold distance from the nearest other point in the data.
+
+The DBSCAN Algorithm is sometimes also called “Euclidean Clustering”, because the decision of whether to place a point in a particular cluster is based upon the “Euclidean distance” between that point and other cluster members.
+
+```python
+# using a PCL library to perform a DBSCAN cluster search
+    # first convert XYZRGB to XYZ then Create a cluster extraction object
+    # then by Settin the tolerances for distance threshold, minimum and maximum cluster size
+    # then Search the k-d tree for clusters and Extract indices for each of the discovered clusters
+    white_cloud = XYZRGB_to_XYZ(extracted_objects)
+    tree = white_cloud.make_kdtree()
+    ec = white_cloud.make_EuclideanClusterExtraction()
+    ec.set_ClusterTolerance(0.015)
+    ec.set_MinClusterSize(1)
+    ec.set_MaxClusterSize(50000)
+    ec.set_SearchMethod(tree)
+    cluster_indices = ec.Extract()
+```
+
+visualize the results in RViz! by creating another point cloud of type PointCloud_PointXYZRGB.
+
+```python
+# final step is to visualize the results in RViz!
+    # by creating another point cloud of type PointCloud_PointXYZRGB
+    cluster_color = get_color_list(len(cluster_indices))
+    color_cluster_point_list = []
+    for j, indices in enumerate(cluster_indices):
+        for i, indice in enumerate(indices):
+            color_cluster_point_list.append([white_cloud[indice][0],
+                                            white_cloud[indice][1],
+                                            white_cloud[indice][2],
+                                             rgb_to_float(cluster_color[j])])
+    cluster_cloud = pcl.PointCloud_PointXYZRGB()
+    cluster_cloud.from_list(color_cluster_point_list)
+```
+
+### the clusters point cloud for the 3 wolds
+
+![c1](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/c1.jpg)
+![c2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/c2.jpg)
+![c3](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/c3.jpg)
+
+
+
+
+
+
 
 
 
