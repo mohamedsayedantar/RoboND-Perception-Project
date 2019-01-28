@@ -7,9 +7,9 @@ using pr2 robot which has RGB-D camera to perceive it's surrounding to pick spec
 ## about PR2
 The PR2 is one of the most advanced research robots ever built. Its powerful hardware and software systems let it do things like clean up tables, fold towels, and fetch you drinks from the fridge.
 
-![PR20](https://image.slidesharecdn.com/lecture04-100211112931-phpapp02/95/lecture-04-sensors-11-728.jpg?cb=1265887798)
 ![PR21](https://robots.ieee.org/robots/pr2/Photos/SD/pr2-photo2-full.jpg)
 ![PR22](https://robots.ieee.org/robots/pr2/Photos/SD/pr2-photo1-full.jpg)
+![PR20](https://image.slidesharecdn.com/lecture04-100211112931-phpapp02/95/lecture-04-sensors-11-728.jpg?cb=1265887798)
 
 
 ## the project outlines
@@ -660,6 +660,8 @@ to solve this error go to `features.py` file in `sensor_stick/src/sensor_stick` 
 ### Note 2:
 the 3 worlds `model.sav` files is existed in the `RoboND-Perception-Project` directory as `model_*.sav` 
 
+
+![PR2@](https://user-images.githubusercontent.com/20687560/28748231-46b5b912-7467-11e7-8778-3095172b7b19.png)
 
 
 
