@@ -1,14 +1,25 @@
 # 3D Perception Project [![Udacity - Robotics NanoDegree Program](https://s3-us-west-1.amazonaws.com/udacity-robotics/Extra+Images/RoboND_flag.png)](https://www.udacity.com/robotics)
 
-Before starting any work on this project, please complete all steps for [Exercise 1, 2 and 3](https://github.com/udacity/RoboND-Perception-Exercises). At the end of Exercise-3 you have a pipeline that can identify points that belong to a specific object.
 
-In this project, you must assimilate your work from previous exercises to successfully complete a tabletop pick and place operation using PR2.
+using pr2 robot which has RGB-D camera to perceive it's surrounding to pick specific object by defining it and place it in another specific place depending on the object itself, by performing analysis on the received data which has noise and distortion, by applying the filtering and segmentation techniques then object recognition  and pose estimation to be able to tell the robot the position and orientation for each object.
 
-The PR2 has been outfitted with an RGB-D sensor much like the one you used in previous exercises. This sensor however is a bit noisy, much like real sensors.
 
-Given the cluttered tabletop scenario, you must implement a perception pipeline using your work from Exercises 1,2 and 3 to identify target objects from a so-called “Pick-List” in that particular order, pick up those objects and place them in corresponding dropboxes.
+# about PR2
+The PR2 is one of the most advanced research robots ever built. Its powerful hardware and software systems let it do things like clean up tables, fold towels, and fetch you drinks from the fridge.
 
-# Project Setup
+![PR20](http://3.bp.blogspot.com/_Fz8u1rrdLUM/S14lup5wfaI/AAAAAAAABAw/xlWqnyYIcas/s400/WILLOW+GARAGE+PR2+DIAGRAM.png)
+![PR21](https://robots.ieee.org/robots/pr2/Photos/SD/pr2-photo2-full.jpg)
+![PR22](https://robots.ieee.org/robots/pr2/Photos/SD/pr2-photo1-full.jpg)
+
+
+
+
+
+
+
+
+
+
 For this setup, catkin_ws is the name of active ROS Workspace, if your workspace name is different, change the commands accordingly
 If you do not have an active ROS workspace, you can create one by:
 
