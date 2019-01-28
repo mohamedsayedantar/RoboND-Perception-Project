@@ -104,6 +104,11 @@ def pcl_callback(pcl_msg):
     # first by converting the ros message type to pcl data
     cloud_filtered = ros_to_pcl(pcl_msg)
 ```
+#### the cloud before any Filtering
+
+![try1](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try1.jpg)
+![try1'](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try1'.jpg)
+
 
 
 ### 4- Statistical Outlier Filtering
@@ -120,10 +125,36 @@ One of the filtering techniques used to remove such outliers is to perform a sta
     outlier_filter.set_std_dev_mul_thresh(x)
     cloud_filtered = outlier_filter.filter()
 ```
-![try1](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try1.jpg)
-![try1'](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try1'.jpg)
+#### the cloud after Statistical Outlier Filtering
 
-### 5- 
+![try2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try2.jpg)
+![try2'](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try2'.jpg)
+big difference right!!
+
+
+### 5- Voxel Grid Downsampling
+RGB-D cameras provide feature rich and particularly dense point clouds, meaning, more points are packed in per unit volume than, for example, a Lidar point cloud. Running computation on a full resolution point cloud can be slow and may not yield any improvement on results obtained using a more sparsely sampled point cloud.
+So, in many cases, it is advantageous to downsample the data. In particular, you are going to use a VoxelGrid Downsampling Filter to derive a point cloud that has fewer points but should still do a good job of representing the input point cloud as a whole.
+```python
+# using VoxelGrid Downsampling Filter to derive a point cloud that has fewer points
+    # Creating a VoxelGrid filter object taking the leaf-size = .01
+    vox = cloud_filtered.make_voxel_grid_filter()
+    LEAF_SIZE = 0.01
+    vox.set_leaf_size(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE)
+    cloud_filtered = vox.filter()
+```
+
+#### the cloud after Voxel Grid Downsampling
+
+![try2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try3.jpg)
+low points per unit volume!!
+
+
+### 6- PassThrough Filter 
+
+
+
+
 
 
 
