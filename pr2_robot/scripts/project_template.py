@@ -58,6 +58,7 @@ def pcl_callback(pcl_msg):
 
     # first by converting the ros message type to pcl data
     cloud_filtered = ros_to_pcl(pcl_msg)
+
     # due to external factors like dust in the environment we apply Outlier Removal Filter
     # taking the number of neighboring points = 4 & threshold scale factor = .00001
     outlier_filter = cloud_filtered.make_statistical_outlier_filter()
@@ -65,12 +66,14 @@ def pcl_callback(pcl_msg):
     x = 0.00001
     outlier_filter.set_std_dev_mul_thresh(x)
     cloud_filtered = outlier_filter.filter()
+
     # using VoxelGrid Downsampling Filter to derive a point cloud that has fewer points
     # Creating a VoxelGrid filter object taking the leaf-size = .01
     vox = cloud_filtered.make_voxel_grid_filter()
     LEAF_SIZE = 0.01
     vox.set_leaf_size(LEAF_SIZE, LEAF_SIZE, LEAF_SIZE)
     cloud_filtered = vox.filter()
+
     # due to prior information about the location of the target in the scene
     # applying Pass Through Filter to remove useless data from the point cloud in Z $ Y axis
     passthrough = cloud_filtered.make_passthrough_filter()
@@ -98,9 +101,11 @@ def pcl_callback(pcl_msg):
     max_distance =0.01
     seg.set_distance_threshold(max_distance)
     inliers, coefficients = seg.segment()
+
     # Extract inliers and outliers
     extracted_table = cloud_filtered.extract(inliers, negative=False)
     extracted_objects = cloud_filtered.extract(inliers, negative=True)
+
     # using a PCL library to perform a DBSCAN cluster search
     # first convert XYZRGB to XYZ then Create a cluster extraction object
     # then by Settin the tolerances for distance threshold, minimum and maximum cluster size
@@ -113,6 +118,7 @@ def pcl_callback(pcl_msg):
     ec.set_MaxClusterSize(50000)
     ec.set_SearchMethod(tree)
     cluster_indices = ec.Extract()
+
     # final step is to visualize the results in RViz!
     # by creating another point cloud of type PointCloud_PointXYZRGB
     cluster_color = get_color_list(len(cluster_indices))
@@ -125,10 +131,12 @@ def pcl_callback(pcl_msg):
                                              rgb_to_float(cluster_color[j])])
     cluster_cloud = pcl.PointCloud_PointXYZRGB()
     cluster_cloud.from_list(color_cluster_point_list)
+
     # eventually Converting PCL data to ROS messages to Publish it
     ros_cluster_cloud = pcl_to_ros(cluster_cloud)
     ros_cloud_objects = pcl_to_ros(extracted_objects)
     ros_cloud_table = pcl_to_ros(extracted_table)
+
     # Publish the ROS messages
     pcl_objects_pub.publish(ros_cloud_objects)
     pcl_table_pub.publish(ros_cloud_table)
@@ -143,27 +151,33 @@ def pcl_callback(pcl_msg):
     # Classify the clusters
     detected_objects_labels = []
     detected_objects = []
+
     # loop to cycle through each of the segmented clusters
     for index, pts_list in enumerate(cluster_indices):
 
         # Grab the points for the cluster
         pcl_cluster = extracted_objects.extract(pts_list)
+
         # convert the cluster from pcl to ROS
         ros_cluster = pcl_to_ros(pcl_cluster)
+
         # Extract histogram features
         color_hists = compute_color_histograms(ros_cluster, using_hsv=True)
         normals = get_normals(ros_cluster)
         normal_hists = compute_normal_histograms(normals)
         feature = np.concatenate((color_hists, normal_hists))
+
         # Make the prediction, retrieve the label for the result
         # and add it to detected_objects_labels list
         prediction = clf.predict(scaler.transform(feature.reshape(1,-1)))
         label = encoder.inverse_transform(prediction)[0]
         detected_objects_labels.append(label)
+
         # Publish a label into RViz
         label_pos = list(white_cloud[pts_list[0]])
         label_pos[2] += .2
         object_markers_pub.publish(make_label(label,label_pos, index))
+
         # Add the detected object to the list of detected objects.
         do = DetectedObject()
         do.label = label
@@ -171,8 +185,10 @@ def pcl_callback(pcl_msg):
         detected_objects.append(do)
 
     rospy.loginfo('Detected {} objects: {}'.format(len(detected_objects_labels), detected_objects_labels))
+
     # Publish the list of detected objects
     detected_objects_pub.publish(detected_objects)
+
     # Suggested location for where to invoke your pr2_mover() function within pcl_callback()
     # Could add some logic to determine whether or not your object detections are robust
     # before calling pr2_mover()
@@ -193,6 +209,7 @@ def pr2_mover(object_list):
     place_pose = Pose()
     arm_name = String()
     #print ("first")
+
     # Get/Read parameters
     object_list_param = rospy.get_param('/object_list')
     dropbox_param = rospy.get_param('/dropbox')
@@ -200,6 +217,7 @@ def pr2_mover(object_list):
     yaml_dict_list = []
     labels = []
     centroids = []
+
     # access the (x, y, z) coordinates of each point and compute the centroid
     for object in object_list:
         labels.append(object.label)
@@ -232,6 +250,7 @@ def pr2_mover(object_list):
         # to know wich arm to be used
         selected_dic = [element for element in dropbox_param if element['group'] == object_group][0]
         arm_name.data = selected_dic.get('name')
+
         # Create a list of dictionaries for yaml
         yaml_dict = make_yaml_dict(test_scene_num, arm_name, object_name, pick_pose, place_pose)
         yaml_dict_list.append(yaml_dict)
@@ -258,18 +277,21 @@ if __name__ == '__main__':
 
     # Create Subscribers
     pcl_sub = rospy.Subscriber("/pr2/world/points", pc2.PointCloud2, pcl_callback, queue_size=1)
+
     # Create Publishers
     pcl_objects_pub = rospy.Publisher("/pcl_objects", PointCloud2, queue_size=1)
     pcl_table_pub = rospy.Publisher("/pcl_table", PointCloud2, queue_size=1)
     pcl_cluster_pub = rospy.Publisher("/pcl_cluster", PointCloud2, queue_size=1)
     object_markers_pub   = rospy.Publisher("/object_markers", Marker, queue_size=1)
     detected_objects_pub = rospy.Publisher("/detected_objects", DetectedObjectsArray, queue_size=1)
+
     # Load Model From disk
     model = pickle.load(open('model.sav', 'rb'))
     clf = model['classifier']
     encoder = LabelEncoder()
     encoder.classes_ = model['classes']
     scaler = model['scaler']
+
     # Initialize color_list
     get_color_list.color_list = []
 
