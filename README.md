@@ -27,7 +27,75 @@ The PR2 is one of the most advanced research robots ever built. Its powerful har
 11. object recognition
 12. PR2_Mover function
 13. Creating ROS Node, Subscribers, and Publishers
-14. Running
+14. environment setup
+15. Running
+
+
+### 1- imports
+using multiple python libraries like `numpy` `sklearn` `pickle` `pickle` and some ROS libraries
+```python
+import numpy as np
+import sklearn
+from sklearn.preprocessing import LabelEncoder
+import pickle
+from sensor_stick.srv import GetNormals
+from sensor_stick.features import compute_color_histograms
+from sensor_stick.features import compute_normal_histograms
+from visualization_msgs.msg import Marker
+from sensor_stick.marker_tools import *
+from sensor_stick.msg import DetectedObjectsArray
+from sensor_stick.msg import DetectedObject
+from sensor_stick.pcl_helper import *
+
+import rospy
+import tf
+from geometry_msgs.msg import Pose
+from std_msgs.msg import Float64
+from std_msgs.msg import Int32
+from std_msgs.msg import String
+from pr2_robot.srv import *
+from rospy_message_converter import message_converter
+import yaml
+```
+
+
+### 2- helper functions
+using some functions like `get_normals` `make_yaml_dict` `send_to_yaml`
+```python
+# Helper function to get surface normals
+def get_normals(cloud):
+    get_normals_prox = rospy.ServiceProxy('/feature_extractor/get_normals', GetNormals)
+    return get_normals_prox(cloud).cluster
+```
+```python
+# Helper function to create a yaml friendly dictionary from ROS messages
+def make_yaml_dict(test_scene_num, arm_name, object_name, pick_pose, place_pose):
+    yaml_dict = {}
+    yaml_dict["test_scene_num"] = test_scene_num.data
+    yaml_dict["arm_name"]  = arm_name.data
+    yaml_dict["object_name"] = object_name.data
+    yaml_dict["pick_pose"] = message_converter.convert_ros_message_to_dictionary(pick_pose)
+    yaml_dict["place_pose"] = message_converter.convert_ros_message_to_dictionary(place_pose)
+    #print ("third")
+    return yaml_dict
+```
+```python
+# Helper function to output to yaml file
+def send_to_yaml(yaml_filename, dict_list):
+    data_dict = {"object_list": dict_list}
+    with open(yaml_filename, 'w') as outfile:
+        yaml.dump(data_dict, outfile, default_flow_style=False)
+        print ("done!")
+```
+
+
+### 3- pcl_callback() function
+this function include filtering, segmentation and object recognition parts
+it will be called back every time a message is published to `/pr2/world/points`
+
+
+### 4- Statistical Outlier Filtering
+
 
 
 
