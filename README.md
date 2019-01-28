@@ -258,20 +258,20 @@ visualize the results in RViz! by creating another point cloud of type PointClou
     cluster_cloud.from_list(color_cluster_point_list)
 ```
 
-### the clusters point cloud for the 3 wolds
+#### the clusters point cloud for the 3 wolds
 
 ![c1](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/c1.jpg)
 ![c2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/c2.jpg)
 ![c3](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/c3.jpg)
 
-### Converting PCL data to ROS messages to Publish it
+#### Converting PCL data to ROS messages to Publish it
 
 ```python
     ros_cluster_cloud = pcl_to_ros(cluster_cloud)
     ros_cloud_objects = pcl_to_ros(extracted_objects)
     ros_cloud_table = pcl_to_ros(extracted_table)
 ```
-### Publish the ROS messages
+#### Publish the ROS messages
 
 ```python
     pcl_objects_pub.publish(ros_cloud_objects)
@@ -282,9 +282,74 @@ visualize the results in RViz! by creating another point cloud of type PointClou
 ## second object recognition  and pose estimation
 
 ### 9- Color Histograms
+a color histogram is a representation of the distribution of colors in an image. For digital images, a color histogram represents the number of pixels that have colors in each of a fixed list of color ranges, that span the image's color space, the set of all possible colors.
+
+#### copmute the color histogram
+
+```python
+def compute_color_histograms(cloud, using_hsv=False):
+
+    # Compute histograms for the clusters
+    point_colors_list = []
+
+    # Step through each point in the point cloud
+    for point in pc2.read_points(cloud, skip_nans=True):
+        rgb_list = float_to_rgb(point[3])
+        if using_hsv:
+            point_colors_list.append(rgb_to_hsv(rgb_list) * 255)
+        else:
+            point_colors_list.append(rgb_list)
+
+    # Populate lists with color values
+    channel_1_vals = []
+    channel_2_vals = []
+    channel_3_vals = []
+
+    for color in point_colors_list:
+        channel_1_vals.append(color[0])
+        channel_2_vals.append(color[1])
+        channel_3_vals.append(color[2])
+
+    L1_hist = np.histogram(channel_1_vals, bins=32, range=(0, 256))
+    L2_hist = np.histogram(channel_2_vals, bins=32, range=(0, 256))
+    L3_hist = np.histogram(channel_3_vals, bins=32, range=(0, 256))
+
+    hist_features = np.concatenate((L1_hist[0], L2_hist[0], L3_hist[0])).astype(np.float64)
+    norm_features = hist_features / np.sum(hist_features)
+
+    return norm_features
+```
+![color_his](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/col_h.jpg)
 
 
+### 10- normal histograms
+a normal histogram is a representation of the distribution of normals to the shape in an image
 
+```python
+def compute_normal_histograms(normal_cloud):
+    norm_x_vals = []
+    norm_y_vals = []
+    norm_z_vals = []
+
+    for norm_component in pc2.read_points(normal_cloud,
+                                          field_names = ('normal_x', 'normal_y', 'normal_z'),
+                                          skip_nans=True):
+        norm_x_vals.append(norm_component[0])
+        norm_y_vals.append(norm_component[1])
+        norm_z_vals.append(norm_component[2])
+
+    # TODO: Compute histograms of normal values (just like with color)
+    S1_hist = np.histogram(norm_z_vals, bins=32, range=(0, 256))
+    S2_hist = np.histogram(norm_z_vals, bins=32, range=(0, 256))
+    S3_hist = np.histogram(norm_z_vals, bins=32, range=(0, 256))
+
+    hist_features = np.concatenate((S1_hist[0], S2_hist[0], S3_hist[0])).astype(np.float64)
+    normed_features = hist_features / np.sum(hist_features)
+
+    return normed_features
+```
+
+![norm_his](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/norm_h.jpg)
 
 
 
