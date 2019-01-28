@@ -155,7 +155,37 @@ low points per unit volume!!
 
 ### 6- PassThrough Filter 
 
+The Pass Through Filter works much like a cropping tool, which allows you to crop any given 3D point cloud by specifying an axis with cut-off values along that axis. The region you allow to pass through, is often referred to as region of interest.
 
+Applying a Pass Through filter along z axis (the height with respect to the ground) to our tabletop scene in the range 0.61 to 1.1
+
+```python
+passthrough = cloud_filtered.make_passthrough_filter()
+    filter_axis = 'z'
+    passthrough.set_filter_field_name(filter_axis)
+    axis_min = 0.61
+    axis_max = 1.1
+    passthrough.set_filter_limits(axis_min, axis_max)
+    cloud_filtered = passthrough.filter()
+```
+
+Applying a Pass Through filter along y axis (for horizontal axis) to our tabletop scene in the range -0.45 to 0.45
+
+```python
+passthrough = cloud_filtered.make_passthrough_filter()
+    filter_axis = 'y'
+    passthrough.set_filter_field_name(filter_axis)
+    axis_min = -0.45
+    axis_max = 0.45
+    passthrough.set_filter_limits(axis_min, axis_max)
+    cloud_filtered = passthrough.filter()
+```
+
+![try2](https://github.com/mohamedsayedantar/RoboND-Perception-Project/blob/master/images/try4.jpg)
+the region has been specified!!
+
+
+### 7- RANSAC Plane Segmentation
 
 
 
